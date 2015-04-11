@@ -6,9 +6,9 @@ entity, or for any commercial purpose, without the prior written permission
 of SimpleScalar, LLC (info@simplescalar.com).
 
 warning: section `.comment' ignored...
-sim: command line: ../../simplesim-3.0/sim-outorder -max:inst 50000000 -fastfwd 20000000 -redir:sim outputas14.txt -bpred 2lev -bpred:2lev 1 256 4 0 -bpred:ras 8 -bpred:btb 64 2 -cache:dl1 dl1:128:32:1:l -pseudoassoc false ../../spec2000binaries/gap00.peak.ev6 -l ./gap.input/ -m 100M 
+sim: command line: ../../simplesim-3.0/sim-outorder -max:inst 50000000 -fastfwd 20000000 -redir:sim outputas20.txt -bpred 2lev -bpred:2lev 1 256 4 0 -bpred:ras 8 -bpred:btb 64 2 -cache:dl1 dl1:128:32:1:l -pseudoassoc true ../../spec2000binaries/gap00.peak.ev6 -l ./gap.input/ -m 100M 
 
-sim: simulation started @ Sat Apr 11 16:51:34 2015, options follow:
+sim: simulation started @ Sat Apr 11 17:42:11 2015, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -24,7 +24,7 @@ latency of all pipeline operations.
 -seed                       1 # random number generator seed (0 for timer seed)
 # -q                    false # initialize and terminate immediately
 # -chkpt               <null> # restore EIO trace execution from <fname>
-# -redir:sim     outputas14.txt # redirect simulator output to file (non-interactive only)
+# -redir:sim     outputas20.txt # redirect simulator output to file (non-interactive only)
 # -redir:prog          <null> # redirect simulated program output to file
 -nice                       0 # simulator scheduling priority
 -max:inst            50000000 # maximum number of inst's to execute
@@ -69,7 +69,7 @@ latency of all pipeline operations.
 -res:fpmult                 1 # total number of floating point multiplier/dividers available
 # -pcstat              <null> # profile stat(s) against text addr's (mult uses ok)
 -bugcompat              false # operate in backward-compatible bugs mode (for testing only)
--pseudoassoc            false # pseudocahe exists {true|false}
+-pseudoassoc             true # pseudocahe exists {true|false}
 
   Pipetrace range arguments are formatted as follows:
 
@@ -141,8 +141,8 @@ sim_num_refs               30475820 # total number of loads and stores committed
 sim_num_loads              18884583 # total number of loads committed
 sim_num_stores         11591237.0000 # total number of stores committed
 sim_num_branches            3537978 # total number of branches committed
-sim_elapsed_time                 37 # total simulation time in seconds
-sim_inst_rate          1351351.3784 # simulation speed (in insts/sec)
+sim_elapsed_time                 34 # total simulation time in seconds
+sim_inst_rate          1470588.2647 # simulation speed (in insts/sec)
 sim_total_insn             51095549 # total number of instructions executed
 sim_total_refs             30934313 # total number of loads and stores executed
 sim_total_loads            19255856 # total number of loads executed

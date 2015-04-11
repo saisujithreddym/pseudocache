@@ -1005,9 +1005,15 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 
   if (LSQ_size < 2 || (LSQ_size & (LSQ_size-1)) != 0)
     fatal("LSQ size must be a positive number > 1 and a power of two");
+    
+  if(!strcmp(pseudo_exists,"true"))
+   {
+      printf("you are awesome");
+   }
 
   /* use a level 1 D-cache? */
-  if (!mystricmp(cache_dl1_opt, "none"))
+  
+   else if (!mystricmp(cache_dl1_opt, "none"))
     {
       cache_dl1 = NULL;
 
