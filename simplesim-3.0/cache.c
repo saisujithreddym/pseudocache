@@ -227,6 +227,8 @@ cache_create(char *name,		/* name of the cache */
 {
   struct cache_t *cp;
   struct cache_blk_t *blk;
+  //printf("%d",blk->rehash_bit);
+  //blk->rehash_bit=1;
   int i, j, bindex;
 
   /* check all cache parameters */
@@ -334,6 +336,8 @@ cache_create(char *name,		/* name of the cache */
 	  blk->status = 0;
 	  blk->tag = 0;
 	  blk->ready = 0;
+    blk->rehash_bit=1;
+    printf("%d",blk->rehash_bit);
 	  blk->user_data = (usize != 0
 			    ? (byte_t *)calloc(usize, sizeof(byte_t)) : NULL);
 
