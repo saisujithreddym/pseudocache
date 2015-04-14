@@ -456,6 +456,8 @@ cache_stats(struct cache_t *cp,		/* cache instance */
    cache blocks are not allocated (!CP->BALLOC), UDATA should be NULL if no
    user data is attached to blocks */
 static int hash_check=0;
+struct cache_blk_t *temp;
+static md_addr_t set1;
 unsigned int				/* latency of access in cycles */
 cache_access(struct cache_t *cp,	/* cache to access */
 	     enum mem_cmd cmd,		/* access type, Read or Write */
@@ -474,6 +476,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
   else
     tag= CACHE_TAG(cp,addr);
   md_addr_t set = CACHE_SET(cp, addr);
+  set1=set;
   md_addr_t bofs = CACHE_BLK(cp, addr);
   md_addr_t addr1=HASH_MASK(cp,addr);
   struct cache_blk_t *blk, *repl;
@@ -583,13 +586,18 @@ if (pseudo_check==1)
     { 
       //if therez a miss, we check the data in addr1 which is obtained by bit flipping.
       //we use hash_check to see that this block is not not executed more than once.
+      if(hash_check==0)
+        temp=cp->sets[set].way_head;
       hash_check++;
       cache_access(cp, cmd, addr1, vp, nbytes,/*now */ now, /* pudata */NULL, /* repl addr */repl_addr);
     
     }
   //goto cache_missfinal;
+  //cp->sets[set1].way_head=temp;
+  cp->sets[set].way_head=cp->sets[set1].way_head;
   hash_check=0;
   cp->sets[set].way_head->rehash_bit=0; 
+  temp=NULL;
     
 }
   // there is a cache miss. The further actions are mentioned here.
