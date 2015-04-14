@@ -1009,11 +1009,13 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
   if(!strcmp(pseudo_exists,"true"))
    {
       printf("you are awesome");
+      pseudo_check=1;
+      
    }
 
   /* use a level 1 D-cache? */
   
-   else if (!mystricmp(cache_dl1_opt, "none"))
+   if (!mystricmp(cache_dl1_opt, "none"))
     {
       cache_dl1 = NULL;
 

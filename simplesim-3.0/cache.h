@@ -59,6 +59,7 @@
 #include "machine.h"
 #include "memory.h"
 #include "stats.h"
+extern int pseudo_check;
 
 /*
  * This module contains code to implement various cache-like structures.  The

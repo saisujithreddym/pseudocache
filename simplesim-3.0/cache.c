@@ -9,6 +9,8 @@
 #include "machine.h"
 #include "cache.h"
 
+int pseudo_check=0;
+ 
 /* cache access macros */
 #define CACHE_TAG(cp, addr)	((addr) >> (cp)->tag_shift)
 #define CACHE_SET(cp, addr)	(((addr) >> (cp)->set_shift) & (cp)->set_mask)
@@ -16,7 +18,7 @@
 #define CACHE_TAGSET(cp, addr)	((addr) & (cp)->tagset_mask)
 #define CACHE_TAG_PSEUDOASSOC(cp,addr) ((addr) >> ((cp)->tag_shift-1))
 /* -1 is added to append the one msb of set to tag. -1 is done instead of 1 as the msb of the address is on the right rather than left. Thats the reason why right shift is done instead of left shift*/
-
+#define HASH_MASK(cp,addr) ((addr)^1<<((cp)->set_shift-1))
 /* extract/reconstruct a block address */
 #define CACHE_BADDR(cp, addr)	((addr) & ~(cp)->blk_mask)
 #define CACHE_MK_BADDR(cp, tag, set)					\
@@ -337,7 +339,7 @@ cache_create(char *name,		/* name of the cache */
 	  blk->tag = 0;
 	  blk->ready = 0;
     blk->rehash_bit=1;
-    printf("%d",blk->rehash_bit);
+    //("%d",blk->rehash_bit);
 	  blk->user_data = (usize != 0
 			    ? (byte_t *)calloc(usize, sizeof(byte_t)) : NULL);
 
@@ -453,6 +455,7 @@ cache_stats(struct cache_t *cp,		/* cache instance */
    at NOW, places pointer to block user data in *UDATA, *P is untouched if
    cache blocks are not allocated (!CP->BALLOC), UDATA should be NULL if no
    user data is attached to blocks */
+static int hash_check=0;
 unsigned int				/* latency of access in cycles */
 cache_access(struct cache_t *cp,	/* cache to access */
 	     enum mem_cmd cmd,		/* access type, Read or Write */
@@ -462,14 +465,22 @@ cache_access(struct cache_t *cp,	/* cache to access */
 	     tick_t now,		/* time of access */
 	     byte_t **udata,		/* for return of user data ptr */
 	     md_addr_t *repl_addr)	/* for address of replaced block */
-{
+{ //printf("in cache access");
+  //hash_check=1;
+  //printf("%d",hash_check);
+ //int size_check=0;
   byte_t *p = vp;
-  md_addr_t tag = CACHE_TAG_PSEUDOASSOC(cp, addr);
+  //printf("%d",pseudo_check);
+  //if (pseudo_check==1)
+    md_addr_t tag = CACHE_TAG_PSEUDOASSOC(cp, addr);
+  //else 
+    //md_addr_t tag= CACHE_TAG(cp,addr);
   md_addr_t set = CACHE_SET(cp, addr);
   md_addr_t bofs = CACHE_BLK(cp, addr);
+  md_addr_t addr1=HASH_MASK(cp,addr);
   struct cache_blk_t *blk, *repl;
   int lat = 0;
-
+  //printf("%d",pseudo_check);
   /* default replacement address */
   if (repl_addr)
     *repl_addr = 0;
@@ -490,12 +501,17 @@ cache_access(struct cache_t *cp,	/* cache to access */
   if (CACHE_TAGSET(cp, addr) == cp->last_tagset)
     {
       /* hit in the same block */
-      blk = cp->last_blk;
-      goto cache_fast_hit;
+     
+        //printf("same block hit");
+        blk = cp->last_blk;
+        cp->last_blk->rehash_bit=0;
+        goto cache_fast_hit;
+      
     }
-    
+   
   if (cp->hsize)
     {
+      //printf("different block hit");
       /* higly-associativity cache, access through the per-set hash tables */
       int hindex = CACHE_HASH(cp, tag);
 
@@ -507,22 +523,31 @@ cache_access(struct cache_t *cp,	/* cache to access */
 	    goto cache_hit;
 	}
     }
-  else
-    {
+  else 
+    { //printf("different block hit");
+      
       /* low-associativity cache, linear search the way list */
       for (blk=cp->sets[set].way_head;
 	   blk;
 	   blk=blk->way_next)
-	{
+	{ 
 	  if (blk->tag == tag && (blk->status & CACHE_BLK_VALID))
-	    goto cache_hit;
-	}
+      { 
+       //printf("%d",blk->rehash_bit);
+       blk->rehash_bit=0;
+        goto cache_hit;
+      }
+        //if (blk->rehash_bit==1)
+          //printf("different block hit");
+	      
+      
+  }
     }
-
+//printf("%d",cp->last_blk->rehash_bit);
   /* cache block not found */
 
   /* **MISS** */
-  cp->misses++;
+  //cp->misses++;
 
   /* select the appropriate block to replace, and re-link this entry to
      the appropriate place in the way list */
@@ -542,7 +567,44 @@ cache_access(struct cache_t *cp,	/* cache to access */
     panic("bogus replacement policy");
   }
 
+//cp->misses++;
+//printf("%d",pseudo_check);
+if (pseudo_check==1)
+{
+  if(cp->sets[set].way_head->rehash_bit==1 && hash_check<=1)
+    { //cp->misses++;
+      //cp->sets[set].way_head->rehash_bit=0;
+                                                                  //printf("%d",hash_check);
+                                                                  //hash_check++;
+      //hash_check=0;
+      //cp->sets[set].way_head->rehash_bit=0; 
+      goto cache_missfinal;
+    
+    
+    }
+  
   /* remove this block from the hash bucket chain, if hash exists */
+  else if( cp->sets[set].way_head->rehash_bit==0 && hash_check<=1)
+    { //printf("%d",cp->sets[set].way_head->rehash_bit);
+    // printf("rehash is 0");
+      //printf("%d",hash_check);
+      //md_addr_t addr1=HASH_MASK(cp,addr);
+      hash_check++;
+      cache_access(cp, cmd, addr1, vp, nbytes,/*now */ now, /* pudata */NULL, /* repl addr */repl_addr);
+    
+    }
+  goto cache_missfinal;
+    //cache_miss:
+    //cp->misses++;
+    //hash_check=0;
+    //cp->sets[set].way_head->rehash_bit=0;  
+}
+  // there is a cache miss. The further actions are mentioned here.
+ 
+ cache_missfinal:
+ hash_check=0;
+ cp->sets[set].way_head->rehash_bit=0; 
+  cp->misses++;
   if (cp->hsize)
     unlink_htab_ent(cp, &cp->sets[set], repl);
 
