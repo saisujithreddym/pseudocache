@@ -465,16 +465,14 @@ cache_access(struct cache_t *cp,	/* cache to access */
 	     tick_t now,		/* time of access */
 	     byte_t **udata,		/* for return of user data ptr */
 	     md_addr_t *repl_addr)	/* for address of replaced block */
-{ //printf("in cache access");
-  //hash_check=1;
-  //printf("%d",hash_check);
- //int size_check=0;
+{ 
   byte_t *p = vp;
+  md_addr_t tag;
   //printf("%d",pseudo_check);
-  //if (pseudo_check==1)
-    md_addr_t tag = CACHE_TAG_PSEUDOASSOC(cp, addr);
-  //else 
-    //md_addr_t tag= CACHE_TAG(cp,addr);
+  if (pseudo_check==1)
+    tag = CACHE_TAG_PSEUDOASSOC(cp, addr);
+  else
+    tag= CACHE_TAG(cp,addr);
   md_addr_t set = CACHE_SET(cp, addr);
   md_addr_t bofs = CACHE_BLK(cp, addr);
   md_addr_t addr1=HASH_MASK(cp,addr);
@@ -572,12 +570,9 @@ cache_access(struct cache_t *cp,	/* cache to access */
 if (pseudo_check==1)
 {
   if(cp->sets[set].way_head->rehash_bit==1 && hash_check<=1)
-    { //cp->misses++;
-      //cp->sets[set].way_head->rehash_bit=0;
-                                                                  //printf("%d",hash_check);
-                                                                  //hash_check++;
-      //hash_check=0;
-      //cp->sets[set].way_head->rehash_bit=0; 
+    { // if therez a miss with rehash=1 its considered a normal miss as in non0pseudo associative cache
+       hash_check=0;
+       cp->sets[set].way_head->rehash_bit=0; 
       goto cache_missfinal;
     
     
@@ -585,26 +580,27 @@ if (pseudo_check==1)
   
   /* remove this block from the hash bucket chain, if hash exists */
   else if( cp->sets[set].way_head->rehash_bit==0 && hash_check<=1)
-    { //printf("%d",cp->sets[set].way_head->rehash_bit);
-    // printf("rehash is 0");
-      //printf("%d",hash_check);
-      //md_addr_t addr1=HASH_MASK(cp,addr);
+    { 
+      //if therez a miss, we check the data in addr1 which is obtained by bit flipping.
+      //we use hash_check to see that this block is not not executed more than once.
       hash_check++;
       cache_access(cp, cmd, addr1, vp, nbytes,/*now */ now, /* pudata */NULL, /* repl addr */repl_addr);
     
     }
-  goto cache_missfinal;
-    //cache_miss:
-    //cp->misses++;
-    //hash_check=0;
-    //cp->sets[set].way_head->rehash_bit=0;  
+  //goto cache_missfinal;
+  hash_check=0;
+  cp->sets[set].way_head->rehash_bit=0; 
+    
 }
   // there is a cache miss. The further actions are mentioned here.
  
+ //cache_missfinal:
+   // hash_check=0;
+    //cp->sets[set].way_head->rehash_bit=0; 
+    //cp->misses++;
  cache_missfinal:
- hash_check=0;
- cp->sets[set].way_head->rehash_bit=0; 
   cp->misses++;
+  
   if (cp->hsize)
     unlink_htab_ent(cp, &cp->sets[set], repl);
 
