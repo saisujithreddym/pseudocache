@@ -145,6 +145,7 @@ struct cache_set_t
   struct cache_blk_t *blks;	/* cache blocks, allocated sequentially, so
 				   this pointer can also be used for random
 				   access to cache blocks */
+  int rehash_bit;
 };
 
 /* cache definition */
